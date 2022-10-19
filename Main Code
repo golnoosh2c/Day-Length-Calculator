@@ -1,0 +1,72 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Oct 14 15:40:59 2022
+
+@author: Golnoosh2c
+"""
+
+#Import libraries
+import math
+import matplotlib.pyplot as plt
+import PySimpleGUI as sg
+#defining layout for the GUI interface
+sg.theme('LightBlue7') #Theme color
+Cities = ["Houston","San Antonio","Dallas", "Austin","Beaumont", "El Paso","Arlington","Corpus Christi","Baytown","Dumas"] #assigning 10 cities of texas
+layout = [[sg.Text('Choose The Name of The City:'),sg.InputOptionMenu(Cities,key='-IN-', size=(10,1))], #Inserting key function for taking the cities from a listbox
+          [sg.Text('Choose The Date:'),sg.Input(key='-IN2-', size=(20,1),disabled= True, text_color= 'Black'),sg.CalendarButton('Calendar', close_when_date_chosen=True, target='-IN2-', format=('%d %B, %Y'))],
+          [sg.Text('The Chosen Day Length is:', key='-OUT2-')],
+          [sg.Text('The Avrage Day Length is:', key='-OUT-')],
+          [sg.Button('Calculate'), sg.Exit()]]  #Layout of GUI we set a button for calculating the daylength 
+window = sg.Window('Day Length Calculator', layout)  #using sg.window command to show the text as interface layout
+while True:  
+     event, values = window.read()
+     if event== 'Calculate':
+         p = 0.8333 #day light coefficient
+         dayLightArray = [] #To list all the day lenght 
+         y = [] #To list all the days
+         G = 0 #Defininh initial value for calculating the average day length
+         F= values["-IN-"] # to get the value of cities 
+         F2= values["-IN2-"] # to get the values of day of the year, J
+         count = 0
+         days = int(F2[0:2]) # To show the 1st two digit calendar date as integer
+         F2 = ''.join((x for x in F2 if not x.isdigit())) #To determine the desire month
+         Months = [" January, "," February, "," March, "," April, "," May, "," June, "," July, "," August, "," September, "," October, "," November, "," December, "]
+         for x in Months:
+             if x != F2:
+                 count = count + 1
+             else:
+                 break
+         InDates = [0,31,59,90,120,151,181,212,243,273,304,334] #Cummulative sum of all days
+         days = days + InDates[count] #Counting the days
+         count = 0
+         for x in Cities:
+             if x != F:
+                 count = count + 1
+             else:
+                 break
+         K=[ 29.760427,29.42517,32.776665, 30.267153, 37.655575, 31.761877, 32.735687, 27.800583, 29.73208,35.865391] 
+         L = K[count]
+         for J in range(1,366): 
+             teta = 0.2163108 + 2 * math.atan(0.9671396 * math.tan(0.00860) * (J - 186))
+             phi = math.asin(0.39795 * math.cos(teta))
+             D = math.sin(p * math.pi/180) + math.sin(L * math.pi/180) * math.sin(phi)
+             D = D/(math.cos(L * math.pi/180) * math.cos(phi))
+             D = 24 - (24 * math.acos(D) ) / math.pi
+             G = G + D #summation of all day length
+             dayLightArray.append(D) # adding as a list of day length for all cities
+             y.append(J) #adding as a list of all days
+         G = G / 365 #determing average day length
+         strc = "The Chosen Day Length is: " + str(dayLightArray[days-1])
+         window["-OUT2-"].update(strc)
+         strc = "The Avrage Day Length is: " + str(G)
+         window["-OUT-"].update(strc)
+         print(event, values)
+         plt.rcParams["figure.figsize"] = [7.50, 3.50] # defining the plot size
+         plt.rcParams["figure.autolayout"] = True
+         plt.title("Day Length")
+         plt.plot(y,dayLightArray, color="red")
+         plt.show()
+     if event == sg.WIN_CLOSED or event== 'Exit':
+        break
+    
+window.close()
